@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 class EmployeeController {
+	
+	public static final String EMPLOYEES_REL = "employees";
 
 	private final EmployeeRepository repository;
 
@@ -31,15 +33,19 @@ class EmployeeController {
 		List<EntityModel<Employee>> employees = repository.findAll().stream()
 				.map(employee -> EntityModel.of(employee,
 						linkTo(methodOn(EmployeeController.class).one(employee.getId())).withSelfRel(),
-						linkTo(methodOn(EmployeeController.class).all()).withRel("employees")))
+						linkTo(methodOn(EmployeeController.class).all()).withRel(EMPLOYEES_REL)))
 				.toList();
 
 		return CollectionModel.of(employees, linkTo(methodOn(EmployeeController.class).all()).withSelfRel());
 	}
 
 	@PostMapping("/employees")
-	Employee newEmployee(@RequestBody Employee newEmployee) {
-		return repository.save(newEmployee);
+	EntityModel<Employee> newEmployee(@RequestBody Employee newEmployee) {
+		
+		Employee employee = repository.save(newEmployee);
+		return EntityModel.of(employee,
+				linkTo(methodOn(EmployeeController.class).one(employee.getId())).withSelfRel(),
+				linkTo(methodOn(EmployeeController.class).all()).withRel(EMPLOYEES_REL));
 	}
 
 	// Single item
@@ -51,7 +57,7 @@ class EmployeeController {
 
 		return EntityModel.of(employee,
 				linkTo(methodOn(EmployeeController.class).one(id)).withSelfRel(),
-				linkTo(methodOn(EmployeeController.class).all()).withRel("employees"));
+				linkTo(methodOn(EmployeeController.class).all()).withRel(EMPLOYEES_REL));
 	}
 
 	@PutMapping("/employees/{id}")
